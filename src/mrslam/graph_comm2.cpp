@@ -52,14 +52,14 @@ void GraphComm2::sendToThrd() {
      if (_gslam->lastVertex()->id() != lastSentVertex){
         lastSentVertex = _gslam->lastVertex()->id();
 
-        ComboMessage* cmsg = _gslam->constructComboMessage();
+        //ComboMessage* cmsg = _gslam->constructComboMessage();
 
         //cg_mrslam::SLAM dslamMsg;
         //_rh->createDSlamMsg(cmsg, dslamMsg);
         //_pubSentReal2.publish(dslamMsg);
      }
 
-     CondensedGraphMessage* gmsg = _gslam->constructCondensedGraphMessage(1);
+     //CondensedGraphMessage* gmsg = _gslam->constructCondensedGraphMessage(1);
 //     if (gmsg) {
 //       _pubSentReal2.publish(gmsg);
 //     }

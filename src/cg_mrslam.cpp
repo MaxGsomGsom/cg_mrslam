@@ -101,10 +101,10 @@ int main(int argc, char **argv)
     std::cerr << "Starting cg_mrslam in modality: " << modality << std::endl;
     if (modality == "sim")
       typeExperiment = SIM;
-    else if (modality == "real")
-      typeExperiment = REAL;
     else if (modality == "real2")
       typeExperiment = REAL2;
+    else if (modality == "real")
+      typeExperiment = REAL;
     else
       typeExperiment = BAG;
   }
@@ -204,8 +204,8 @@ int main(int argc, char **argv)
   ////////////////////
   //Setting up network
   if (typeExperiment == REAL2) {
-    GraphComm2 gc(&gslam, idRobot, nRobots, &rh);
-    gc.init_threads();
+    GraphComm2 gc2(&gslam, idRobot, nRobots, &rh);
+    gc2.init_threads();
   }
   else {
     GraphComm gc(&gslam, idRobot, nRobots, base_addr, typeExperiment);
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 
       //Publish graph to visualize it on Rviz
       if (publishGraph)
-	graphPublisher.publishGraph();
+    graphPublisher.publishGraph();
       
       if (publishMap){
 	//Update map
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
         mapCenter = mapCreator.getMapCenter();
         mapServer.setOffset(mapCenter);
         mapServer.publishMapMetaData();
-	mapServer.publishMap();
+    mapServer.publishMap();
       }
       
     }else {

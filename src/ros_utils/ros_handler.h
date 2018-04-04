@@ -43,7 +43,7 @@
 
 #include "mrslam/msg_factory.h"
 
-enum TypeExperiment {SIM, REAL, REAL2, BAG};
+enum TypeExperiment {SIM, REAL, BAG, REAL2};
   
 using namespace g2o;
 

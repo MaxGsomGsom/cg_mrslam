@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(cg_mrslam)
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -119,7 +119,6 @@ catkin_package(
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake_modules)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_BUILD_TYPE Debug)
 
 FIND_PACKAGE(OpenMP)
 if(OPENMP_FOUND)
