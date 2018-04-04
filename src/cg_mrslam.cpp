@@ -33,6 +33,7 @@
 
 #include "mrslam/mr_graph_slam.h"
 #include "mrslam/graph_comm.h"
+#include "mrslam/graph_comm2.h"
 #include "ros_utils/ros_handler.h"
 #include "ros_utils/graph_ros_publisher.h"
 
@@ -93,7 +94,7 @@ int main(int argc, char **argv)
   arg.param("o", outputFilename, "", "file where to save output");
   arg.parseArgs(argc, argv);
   
-  if (modality != "sim" && modality != "real" && modality != "bag"){
+  if (modality != "sim" && modality != "real" && modality != "real2" && modality != "bag"){
     std::cerr << "Unknown modality: " << modality << std::endl;
     exit(0);
   } else {
@@ -102,6 +103,8 @@ int main(int argc, char **argv)
       typeExperiment = SIM;
     else if (modality == "real")
       typeExperiment = REAL;
+    else if (modality == "real2")
+      typeExperiment = REAL2;
     else
       typeExperiment = BAG;
   }
@@ -200,8 +203,14 @@ int main(int argc, char **argv)
 
   ////////////////////
   //Setting up network
-  GraphComm gc(&gslam, idRobot, nRobots, base_addr, typeExperiment);
-  gc.init_network(&rh);
+  if (typeExperiment == REAL2) {
+    GraphComm2 gc(&gslam, idRobot, nRobots, &rh);
+    gc.init_threads();
+  }
+  else {
+    GraphComm gc(&gslam, idRobot, nRobots, base_addr, typeExperiment);
+    gc.init_network(&rh);
+  }
 
   ros::Rate loop_rate(10);
   while (ros::ok()){

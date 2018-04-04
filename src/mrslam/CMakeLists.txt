@@ -2,6 +2,7 @@ add_subdirectory(condensed_graph)
 
 add_library(cg_mrslam_library
   graph_comm.cpp
+  graph_comm2.cpp
   msg_factory.cpp
   mr_graph_slam.cpp
   mr_closure_buffer.cpp

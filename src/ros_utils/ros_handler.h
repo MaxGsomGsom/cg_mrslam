@@ -43,7 +43,7 @@
 
 #include "mrslam/msg_factory.h"
 
-enum TypeExperiment {SIM, REAL, BAG};
+enum TypeExperiment {SIM, REAL, REAL2, BAG};
   
 using namespace g2o;
 
@@ -73,13 +73,15 @@ class RosHandler
   void publishReceivedMsg(RobotMessage* msg);
   void publishPing(int idRobotFrom);
 
+  inline ros::NodeHandle& GetNodeHandle() { return _nh; }
+  void createDSlamMsg(RobotMessage* msg, cg_mrslam::SLAM& dslamMsg);
+
  protected:
   void odomCallback(const nav_msgs::Odometry::ConstPtr& msg);
   void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
   void groundTruthCallback(const nav_msgs::Odometry::ConstPtr& msg, SE2 *gtpose);
   void pingCallback(const cg_mrslam::Ping::ConstPtr& msg);
 
-  void createDSlamMsg(RobotMessage* msg, cg_mrslam::SLAM& dslamMsg);
   void createCondensedGraphMsg(CondensedGraphMessage* gmsg,  cg_mrslam::SLAM& dslamMsg);
   void createComboMsg(ComboMessage* cmsg, cg_mrslam::SLAM& dslamMsg);
 
