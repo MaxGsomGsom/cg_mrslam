@@ -75,6 +75,8 @@ class RosHandler
 
   inline ros::NodeHandle& GetNodeHandle() { return _nh; }
   void createDSlamMsg(RobotMessage* msg, cg_mrslam::SLAM& dslamMsg);
+  void restoreDSlamMsg(RobotMessage** msg, cg_mrslam::SLAM& dslamMsg); //for real2 mode
+
 
  protected:
   void odomCallback(const nav_msgs::Odometry::ConstPtr& msg);
@@ -84,6 +86,8 @@ class RosHandler
 
   void createCondensedGraphMsg(CondensedGraphMessage* gmsg,  cg_mrslam::SLAM& dslamMsg);
   void createComboMsg(ComboMessage* cmsg, cg_mrslam::SLAM& dslamMsg);
+  void restoreCondensedGraphMsg(RobotMessage** gmsg,  cg_mrslam::SLAM& dslamMsg); //for real2 mode
+  void restoreComboMsg(RobotMessage** cmsg, cg_mrslam::SLAM& dslamMsg); //for real2 mode
 
   ////////////////////
   ros::NodeHandle _nh;

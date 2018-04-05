@@ -69,7 +69,7 @@ class GraphComm2
   boost::thread pthread;
 
   ros::Subscriber _subRecvReal2;
-  ros::Publisher _pubSentReal2;
+  vector<ros::Publisher> _pubsSentReal2;
 };
 
 

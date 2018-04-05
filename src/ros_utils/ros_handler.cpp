@@ -211,6 +211,29 @@ void RosHandler::createComboMsg(ComboMessage* cmsg, cg_mrslam::SLAM& dslamMsg){
   }
 }
 
+void RosHandler::restoreComboMsg(RobotMessage** msg, cg_mrslam::SLAM& dslamMsg){
+  ComboMessage* cmsg = new ComboMessage();
+  cmsg->VertexArrayMessage::setRobotId(dslamMsg.robotId);
+  cmsg->RobotLaserMessage::setRobotId(dslamMsg.robotId);
+  *msg = cmsg;
+
+  cmsg->nodeId = dslamMsg.laser.nodeId;
+  cmsg->readings = dslamMsg.laser.readings;
+  cmsg->minangle = dslamMsg.laser.minAngle;
+  cmsg->angleincrement = dslamMsg.laser.angleInc;
+  cmsg->maxrange = dslamMsg.laser.maxRange;
+  cmsg->accuracy = dslamMsg.laser.accuracy;
+
+  cmsg->vertexVector.resize(dslamMsg.vertices.size());
+
+  for (size_t i = 0; i < dslamMsg.vertices.size(); i++){
+    cmsg->vertexVector[i].id = dslamMsg.vertices[i].id;
+    cmsg->vertexVector[i].estimate[0] = dslamMsg.vertices[i].estimate[0];
+    cmsg->vertexVector[i].estimate[1] = dslamMsg.vertices[i].estimate[1];
+    cmsg->vertexVector[i].estimate[2] = dslamMsg.vertices[i].estimate[2];
+  }
+}
+
 void RosHandler::createCondensedGraphMsg(CondensedGraphMessage* gmsg,  cg_mrslam::SLAM& dslamMsg){
   dslamMsg.header.stamp = ros::Time::now();
 
@@ -235,6 +258,32 @@ void RosHandler::createCondensedGraphMsg(CondensedGraphMessage* gmsg,  cg_mrslam
   dslamMsg.closures = gmsg->closures;
 }
 
+void RosHandler::restoreCondensedGraphMsg(RobotMessage** msg,  cg_mrslam::SLAM& dslamMsg){
+
+  CondensedGraphMessage* gmsg = new CondensedGraphMessage(dslamMsg.robotId);
+  gmsg->EdgeArrayMessage::setRobotId(dslamMsg.robotId);
+  gmsg->ClosuresMessage::setRobotId(dslamMsg.robotId);
+  *msg = gmsg;
+
+  gmsg->edgeVector.resize(dslamMsg.edges.size());
+
+  for (size_t i = 0; i < dslamMsg.edges.size(); i++){
+    gmsg->edgeVector[i].idfrom = dslamMsg.edges[i].idFrom;
+    gmsg->edgeVector[i].idto = dslamMsg.edges[i].idTo;
+    gmsg->edgeVector[i].estimate[0] = dslamMsg.edges[i].estimate[0];
+    gmsg->edgeVector[i].estimate[1] = dslamMsg.edges[i].estimate[1];
+    gmsg->edgeVector[i].estimate[2] = dslamMsg.edges[i].estimate[2];
+    gmsg->edgeVector[i].information[0] = dslamMsg.edges[i].information[0];
+    gmsg->edgeVector[i].information[1] = dslamMsg.edges[i].information[1];
+    gmsg->edgeVector[i].information[2] = dslamMsg.edges[i].information[2];
+    gmsg->edgeVector[i].information[3] = dslamMsg.edges[i].information[3];
+    gmsg->edgeVector[i].information[4] = dslamMsg.edges[i].information[4];
+    gmsg->edgeVector[i].information[5] = dslamMsg.edges[i].information[5];
+  }
+
+  gmsg->closures = dslamMsg.closures;
+}
+
 void RosHandler::createDSlamMsg(RobotMessage* msg, cg_mrslam::SLAM& dslamMsg){
   ComboMessage* cmsg = dynamic_cast<ComboMessage*>(msg);
   if (cmsg)
@@ -244,6 +293,13 @@ void RosHandler::createDSlamMsg(RobotMessage* msg, cg_mrslam::SLAM& dslamMsg){
     if (gmsg)
       createCondensedGraphMsg(gmsg, dslamMsg);
   }
+}
+
+void RosHandler::restoreDSlamMsg(RobotMessage** msg, cg_mrslam::SLAM& dslamMsg){
+  if (dslamMsg.vertices.size() > 0)
+    restoreComboMsg(msg, dslamMsg);
+  if (dslamMsg.edges.size() > 0)
+    restoreCondensedGraphMsg(msg, dslamMsg);
 }
 
 void RosHandler::publishSentMsg(RobotMessage* msg){

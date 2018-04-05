@@ -27,7 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "graph_comm2.h"
-
+#include <string>
 GraphComm2::GraphComm2 (MRGraphSLAM* gslam, int idRobot, int nRobots, RosHandler* rh){
 
   _idRobot = idRobot;
@@ -39,8 +39,14 @@ GraphComm2::GraphComm2 (MRGraphSLAM* gslam, int idRobot, int nRobots, RosHandler
 }
 
 void GraphComm2::init_threads(){
-  _subRecvReal2 = _rh->GetNodeHandle().subscribe<cg_mrslam::SLAM>("mrslam_msgs", 1,  &GraphComm2::receiveFromThrd, this);
-  _pubSentReal2 = _rh->GetNodeHandle().advertise<cg_mrslam::SLAM>("mrslam_msgs", 1);
+
+  _subRecvReal2 = _rh->GetNodeHandle().subscribe<cg_mrslam::SLAM>("/mrslam_msgs_r" + to_string(_idRobot), 1,  &GraphComm2::receiveFromThrd, this);
+
+  for (int i=0; i<_nRobots; i++) {
+     if (i!=_idRobot)
+        _pubsSentReal2.push_back(_rh->GetNodeHandle().advertise<cg_mrslam::SLAM>("/mrslam_msgs_r" + to_string(i), 1));
+     else _pubsSentReal2.push_back(ros::Publisher());
+  }
 
   sthread = boost::thread(&GraphComm2::sendToThrd, this);
   pthread = boost::thread(&GraphComm2::processQueueThrd, this);
@@ -49,36 +55,50 @@ void GraphComm2::init_threads(){
 void GraphComm2::sendToThrd() {
   int lastSentVertex = -1;
   while(1){
-     if (_gslam->lastVertex()->id() != lastSentVertex){
-        lastSentVertex = _gslam->lastVertex()->id();
 
-        //ComboMessage* cmsg = _gslam->constructComboMessage();
-
-        //cg_mrslam::SLAM dslamMsg;
-        //_rh->createDSlamMsg(cmsg, dslamMsg);
-        //_pubSentReal2.publish(dslamMsg);
+     //ComboMessage
+     ComboMessage* cmsg = nullptr;
+     VertexSE2* last = _gslam->lastVertex();
+     if (last->id() != lastSentVertex){
+        lastSentVertex = last->id();
+        cmsg = _gslam->constructComboMessage();
      }
 
-     //CondensedGraphMessage* gmsg = _gslam->constructCondensedGraphMessage(1);
-//     if (gmsg) {
-//       _pubSentReal2.publish(gmsg);
-//     }
+     for (size_t i = 0; i < _nRobots; i++) {
+         if (i != _idRobot) {
+
+             //ComboMessage
+             if (cmsg != nullptr){
+                cg_mrslam::SLAM dslamMsg;
+                _rh->createDSlamMsg(cmsg, dslamMsg);
+                _pubsSentReal2.at(i).publish(dslamMsg);
+             }
+
+             //CondensedGraphMessage
+             CondensedGraphMessage* gmsg = _gslam->constructCondensedGraphMessage(1);
+             if (gmsg) {
+                 cg_mrslam::SLAM dslamMsg;
+                 _rh->createDSlamMsg(gmsg, dslamMsg);
+                 _pubsSentReal2.at(i).publish(dslamMsg);
+             }
+         }
+     }
      usleep(150000);
   }
 }
 
-void GraphComm2::receiveFromThrd(cg_mrslam::SLAM msg){
+void GraphComm2::receiveFromThrd(cg_mrslam::SLAM dslamMsg){
 
-//    if (msg.robotId() == _idRobot) return;
+    fprintf(stderr, "Received info from: %i\n", dslamMsg.robotId);
 
-//    fprintf(stderr, "Received info from: %i\n", msg.robotId());
+    StampedRobotMessage vmsg;
+    RobotMessage* rmsg;
+    _rh->restoreDSlamMsg(&rmsg, dslamMsg);
+    vmsg.msg = rmsg;
+    vmsg.refVertex = _gslam->lastVertex();
 
-//    StampedRobotMessage vmsg;
-//    vmsg.msg = msg;
-//    vmsg.refVertex = _gslam->lastVertex();
-
-//    boost::mutex::scoped_lock lock(_queueMutex);
-//    _queue.push(vmsg);
+    boost::mutex::scoped_lock lock(_queueMutex);
+    _queue.push(vmsg);
 
 }
 

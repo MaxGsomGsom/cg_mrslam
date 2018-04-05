@@ -185,15 +185,15 @@ int main(int argc, char **argv)
     mapServer.publishMapMetaData();
     mapServer.publishMap();
   }
-  
-  if (publishGraph)
-    graphPublisher.publishGraph();
 
   if (publishMap || publishGraph){
     graphPublisher.start();
     graphPublisher.setEstimate(gslam.lastVertex()->estimate());
     graphPublisher.setOdom(odomPosk_1);
   }
+
+  if (publishGraph)
+    graphPublisher.publishGraph();
 
   //Saving g2o file
   char buf[100];
@@ -203,13 +203,16 @@ int main(int argc, char **argv)
 
   ////////////////////
   //Setting up network
+  GraphComm2* gc2;
+  GraphComm* gc;
+
   if (typeExperiment == REAL2) {
-    GraphComm2 gc2(&gslam, idRobot, nRobots, &rh);
-    gc2.init_threads();
+    gc2 = new GraphComm2(&gslam, idRobot, nRobots, &rh);
+    gc2->init_threads();
   }
   else {
-    GraphComm gc(&gslam, idRobot, nRobots, base_addr, typeExperiment);
-    gc.init_network(&rh);
+    gc = new GraphComm(&gslam, idRobot, nRobots, base_addr, typeExperiment);
+    gc->init_network(&rh);
   }
 
   ros::Rate loop_rate(10);
