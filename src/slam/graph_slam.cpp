@@ -160,9 +160,9 @@ void GraphSLAM::addData(SE2 currentOdom, RobotLaser* laser){
   //v->setUserData(ellipse);
   v->addUserData(laser);
 
-  std::cout << std::endl << 
+  std::cout <<
     "Current vertex: " << v->id() << 
-    " Estimate: "<< v->estimate().translation().x() << 
+    ". Estimate: "<< v->estimate().translation().x() <<
     " " << v->estimate().translation().y() << 
     " " << v->estimate().rotation().angle() << std::endl;
 
@@ -212,9 +212,9 @@ void GraphSLAM::addDataSM(SE2 currentOdom, RobotLaser* laser){
   //v->setUserData(ellipse);
   v->addUserData(laser);
 
-  std::cout << endl << 
+  std::cout <<
     "Current vertex: " << v->id() << 
-    " Estimate: "<< v->estimate().translation().x() << 
+    ". Estimate: "<< v->estimate().translation().x() <<
     " " << v->estimate().translation().y() << 
     " " << v->estimate().rotation().angle() << std::endl;
 
@@ -521,12 +521,13 @@ void GraphSLAM::checkClosures(){
       cout << "Results:" << endl;
       for (LoopClosureChecker::EdgeDoubleMap::iterator it= results.begin(); it!= results.end(); it++){
 	EdgeSE2* e = (EdgeSE2*) (it->first);
-	cout << "Edge from: " << e->vertices()[0]->id() << " to: " << e->vertices()[1]->id() << ". Chi2 = " << it->second <<  endl;
+    cout << "Edge from: " << e->vertices()[0]->id() << " to: " << e->vertices()[1]->id() << ". Chi2 = " << it->second;
 
 	if (it->second < inlierThreshold){
-	  cout << "Is an inlier. Adding to Graph" << endl;
+        cout << ". Inlier. Adding to Graph";
 	  _graph->addEdge(e);
 	}
+    cout << endl;
       }
     }
   }

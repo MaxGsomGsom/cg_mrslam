@@ -28,6 +28,7 @@
 
 #include "mr_graph_slam.h"
 
+bool debug = false;
 
 MRGraphSLAM::MRGraphSLAM() :condensedGraphs(GraphSLAM::graph()), 
 			    maxScoreMR(GraphSLAM::maxScore), 
@@ -60,17 +61,17 @@ void MRGraphSLAM::setInterRobotClosureParams(double maxScoreMR_, int minInliersM
 void MRGraphSLAM::checkInterRobotClosures(){
   
   if (interRobotClosures.size()){
-    cout << endl << "Inter Robot Closure Checking." << endl;
+    cout << "Inter Robot Closure Checking." << endl;
 
     for (std::map<int, ClosureBuffer*>::iterator it = interRobotClosures.mrClosures.begin(); it != interRobotClosures.mrClosures.end(); it++){
       int robotId = it->first;
       ClosureBuffer* cb = it->second;
-      std::cout << "Closures robot " << robotId << std::endl;
+      cout << "Closures robot " << robotId << endl;
       if (cb->checkList(windowMRLoopClosure)){
 	lcc.init(cb->vertices(), cb->edgeSet(), inlierThreshold);
 	lcc.check();
 
-	cout << "Best Chi2 = " << lcc.chi2() << endl;
+    cout << "Best Chi2 = " << lcc.chi2() << endl;
 	cout << "Inliers = " << lcc.inliers() << endl;
 
 	if (lcc.inliers() >= minInliersMR){
@@ -80,11 +81,12 @@ void MRGraphSLAM::checkInterRobotClosures(){
 	  for (LoopClosureChecker::EdgeDoubleMap::iterator it= results.begin(); it!= results.end(); it++){
 	    EdgeSE2* e = (EdgeSE2*) (it->first);
 	    VertexSE2* vto=dynamic_cast<VertexSE2*>(e->vertices()[1]);
-	    cout << "Edge from: " << e->vertices()[0]->id() << " to: " << vto->id() << ". Chi2 = " << it->second <<  endl;
+        cout << "Edge from: " << e->vertices()[0]->id() << " to: " << vto->id() << ". Chi2 = " << it->second;
 
 	    if (it->second < inlierThreshold){
-	      cout << "Is an inlier. Adding to Graph" << endl;
-	   
+          cout << ". Inlier. Adding to Graph";
+          cout << endl;
+
 	      e->setId(++_runningEdgeId + _baseId); 
 	      _graph->addEdge(e);
 	      OptimizableGraph::Vertex* inserted = _graph->vertex(vto->id());
@@ -101,7 +103,6 @@ void MRGraphSLAM::checkInterRobotClosures(){
 	      inClosures.insert(std::make_pair(vto->id(), vto));
 	    }
 	  }
-	  cout << endl;
 	  if (inClosures.size())
 	    condensedGraphs.insertInClosure(robotId, inClosures);
 	}
@@ -169,6 +170,7 @@ void MRGraphSLAM::addInterRobotData(ComboMessage* cmsg, OptimizableGraph::Vertex
     }
   }
 
+  //select 10 vertexes before and after
   OptimizableGraph::VertexSet referenceVset;
   VertexSE2 *referenceVertex = (VertexSE2*) refVertex;
   referenceVset.insert(referenceVertex);
@@ -188,11 +190,12 @@ void MRGraphSLAM::addInterRobotData(ComboMessage* cmsg, OptimizableGraph::Vertex
       break;
   }
 
-  cout << "Vertices for global matching" << endl;
+  //
+  cout << "Vertices for global matching: ";
   for (OptimizableGraph::VertexSet::iterator it = referenceVset.begin(); it!= referenceVset.end(); it++){
     cout << (*it)->id() << " ";
   }
-  cout << endl;
+  cout << "and ";
   for (OptimizableGraph::VertexSet::iterator it = vset.begin(); it!= vset.end(); it++){
     cout << (*it)->id() << " ";
   }
@@ -213,14 +216,14 @@ void MRGraphSLAM::addInterRobotData(ComboMessage* cmsg, OptimizableGraph::Vertex
     bool shouldIAdd = _LCMatcher.globalMatching(referenceVset, referenceVertex, vset, v, &transf, maxScoreMR);
     
     if (shouldIAdd){
-      cerr << "Found inter robot match" << endl;
+      cout << "Found inter robot match" << endl;
 
       if (detectRobotInRange){
 	double score;
 	bool robotDetected = _LCMatcher.verifyMatching(referenceVset, referenceVertex, vset, v, transf, &score); 
 
 	if (!robotDetected){
-	  cerr << "Not Robot Detected in Range" << endl;
+      cout << "No robots detected in the range" << endl;
 	  return;
 	}
       }
@@ -272,21 +275,21 @@ void MRGraphSLAM::findInterRobotConstraints(){
   for (std::map<int, ClosureBuffer*>::iterator it = tmp.mrClosures.begin(); it != tmp.mrClosures.end(); it++){
     int robotId = it->first;
     ClosureBuffer *c = it->second;
-    cerr << "Trying to match vertices from robot: " << robotId << endl;
+    cout << "Trying to match vertices from robot: " << robotId << endl;
     OptimizableGraph::VertexIDMap vertices = c->vertices();
-    cerr << "Vertices to match: "; 
+    cout << "Vertices to match: ";
     for (OptimizableGraph::VertexIDMap::iterator itv = vertices.begin(); itv != vertices.end(); itv++){
       VertexSE2* vertex= (VertexSE2*)(itv->second);
-      cerr << vertex->id() << " " ; 
+      cout << vertex->id() << " " ;
     }
-    cerr << std::endl;
+    cout << std::endl;
     for (OptimizableGraph::VertexIDMap::iterator it2 = vertices.begin(); it2 != vertices.end(); it2++){
       VertexSE2* v = (VertexSE2*) (it2->second);
 
       SE2 transf;
       bool shouldIAdd = _LCMatcher.globalMatching(referenceVset, referenceVertex, v, &transf, maxScoreMR);
       if (shouldIAdd){
-	cerr << "Found match with vertex " << v->id() << endl;
+    cout << "Found match with vertex " << v->id() << endl;
 
 	if (detectRobotInRange){
 	  double score;
@@ -295,7 +298,7 @@ void MRGraphSLAM::findInterRobotConstraints(){
 	  bool robotDetected = _LCMatcher.verifyMatching(referenceVset, referenceVertex, vset, v, transf, &score);
 	  
 	  if (!robotDetected){
-	    cerr << "Not Robot Detected in Range" << endl;
+        cout << "No robots detected in the range" << endl;
 	    continue;
 	  } 
 	}
@@ -330,13 +333,13 @@ void MRGraphSLAM::findInterRobotConstraints(){
 
 void MRGraphSLAM::addInterRobotData(CondensedGraphMessage* gmsg){
   ClosuresMessage* cmsg = dynamic_cast<ClosuresMessage*>(gmsg);
-  //cerr << "Adding inter Robot Data CondensedGraphMessage" << endl;
+  if (debug) cout << "Adding inter Robot Data CondensedGraphMessage" << endl;
   if (cmsg){
     OptimizableGraph::VertexIDMap closures;
-    //cerr << "Robot " << gmsg->robotId() << " asked for node: " << endl;
+    if (debug) cout << "Robot " << gmsg->robotId() << " asked for node: " << endl;
     for (size_t i=0; i<cmsg->closures.size(); i++){
       int nodeId = cmsg->closures[i];
-      //cerr << "Node: " << nodeId << endl;
+      if (debug) cout << "Node: " << nodeId << endl;
       OptimizableGraph::Vertex* v=graph()->vertex(nodeId);
       if (v)
 	closures.insert(std::make_pair(nodeId,v));
@@ -369,7 +372,7 @@ void MRGraphSLAM::addInterRobotData(CondensedGraphMessage* gmsg){
 		emsg->edgeVector[i].estimate[1],
 		emsg->edgeVector[i].estimate[2]);
 
-	//cerr << "Adding subgraph edge from " << idFrom << " to " << idTo << " Estimate: " << emsg->edgeVector[i].estimate[0] << " " << emsg->edgeVector[i].estimate[1] << " " << emsg->edgeVector[i].estimate[2] << endl;
+    if (debug) cout << "Adding subgraph edge from " << idFrom << " to " << idTo << " Estimate: " << emsg->edgeVector[i].estimate[0] << " " << emsg->edgeVector[i].estimate[1] << " " << emsg->edgeVector[i].estimate[2] << endl;
 
 	Eigen::Matrix3d inf;
 	inf(0,0) = emsg->edgeVector[i].information[0];
@@ -395,8 +398,9 @@ void MRGraphSLAM::addInterRobotData(CondensedGraphMessage* gmsg){
 }
 
 void MRGraphSLAM::addInterRobotData(GraphMessage* gmsg){
+  //if it is closures message, which contains ids of the same nodes
   ClosuresMessage* cmsg = dynamic_cast<ClosuresMessage*>(gmsg);
-  //cerr << "Adding inter Robot Data GraphMessage" << endl;
+  if (debug) cout << "Adding inter Robot Data GraphMessage" << endl;
   if (cmsg){
     OptimizableGraph::VertexIDMap closures;
     for (size_t i=0; i<cmsg->closures.size(); i++){
@@ -406,6 +410,7 @@ void MRGraphSLAM::addInterRobotData(GraphMessage* gmsg){
 	closures.insert(std::make_pair(nodeId,v));
     }
 
+    //remove them from graph
     if (closures.size()){
       condensedGraphs.insertOutClosure(gmsg->robotId(), closures);
       condensedGraphs.computeCondensedGraph(gmsg->robotId());
@@ -413,9 +418,10 @@ void MRGraphSLAM::addInterRobotData(GraphMessage* gmsg){
 
   }
 
+  //if it is vertexes message, which contains it's estimates and ids
   VertexArrayMessage* vmsg = dynamic_cast<VertexArrayMessage*>(gmsg);
   if (vmsg){
-    cerr << "Adding vertices from robot: "; 
+    cout << "Adding vertices from robot: ";
     for (size_t i=0; i<vmsg->vertexVector.size(); i++){
       VertexSE2* v=(VertexSE2*)(graph()->vertex(vmsg->vertexVector[i].id));
       SE2 est(vmsg->vertexVector[i].estimate[0],
@@ -429,15 +435,16 @@ void MRGraphSLAM::addInterRobotData(GraphMessage* gmsg){
 	v = new VertexSE2;
 	v->setId(vmsg->vertexVector[i].id);
 	v->setEstimate(est);
-	cerr << v->id() << " " ;
+    cout << v->id() << " " ;
+    //just add to graph
 	graph()->addVertex(v);
       }
       
     }
-    cerr << endl;
+    cout << endl;
   }
     
-
+  //contains edges, info about connections between nodes of different robots
   EdgeArrayMessage* emsg = dynamic_cast<EdgeArrayMessage*>(gmsg);
   if (emsg){
     OptimizableGraph::EdgeSet edges;
@@ -484,7 +491,7 @@ void MRGraphSLAM::addInterRobotData(GraphMessage* gmsg){
 
 void MRGraphSLAM::addInterRobotData(StampedRobotMessage vmsg){
   boost::mutex::scoped_lock lockg(graphMutex);
-  std::cerr << "Adding inter robot data " << std::endl;
+  cout << "Adding inter robot data " << endl;
   ComboMessage* cmsg = dynamic_cast<ComboMessage*>(vmsg.msg);
   if (cmsg)
     addInterRobotData(cmsg, vmsg.refVertex);
@@ -534,7 +541,7 @@ EdgeArrayMessage* MRGraphSLAM::constructEdgeArrayMessage(OptimizableGraph::EdgeS
     int i = 0;
     for (OptimizableGraph::EdgeSet::const_iterator it = edges.begin(); it != edges.end(); ++it) {
       EdgeSE2* e = dynamic_cast<EdgeSE2*>(*it);
-      //cerr << "Sending Edge from: " << e->vertices()[0]->id() << " to: " << e->vertices()[1]->id() << endl;
+      if (debug) cout << "Sending Edge from: " << e->vertices()[0]->id() << " to: " << e->vertices()[1]->id() << endl;
       
       VertexSE2* vfrom =  (VertexSE2*)(e->vertices()[0]);
       VertexSE2* vto =  (VertexSE2*)(e->vertices()[1]);
@@ -617,7 +624,7 @@ CondensedGraphMessage* MRGraphSLAM::constructCondensedGraphMessage(int idRobotTo
     int i = 0;
     for (OptimizableGraph::VertexIDMap::iterator it = inClosuresRobot->begin(); it != inClosuresRobot->end(); it++){
       int vId = it->first;
-      //cerr << "Asking for node " << vId << endl;
+      if (debug) cout << "Asking for node " << vId << endl;
       gmsg->closures[i] = vId;
       i++;
     }
@@ -638,7 +645,7 @@ CondensedGraphMessage* MRGraphSLAM::constructCondensedGraphMessage(int idRobotTo
     int i = 0;
     for (OptimizableGraph::EdgeSet::const_iterator it = subgraphRobot->begin(); it != subgraphRobot->end(); ++it) {
     EdgeSE2* e = dynamic_cast<EdgeSE2*>(*it);
-    //cerr << "Sending Edge from: " << e->vertices()[0]->id() << " to: " << e->vertices()[1]->id() << endl;
+    //cout << "Sending Edge from: " << e->vertices()[0]->id() << " to: " << e->vertices()[1]->id() << endl;
       
     VertexSE2* vfrom =  (VertexSE2*)(e->vertices()[0]);
     VertexSE2* vto =  (VertexSE2*)(e->vertices()[1]);
@@ -682,7 +689,7 @@ GraphMessage* MRGraphSLAM::constructGraphMessage(int idRobotTo){
     int i = 0;
     for (OptimizableGraph::VertexIDMap::iterator it = inClosuresRobot->begin(); it != inClosuresRobot->end(); it++){
       int vId = it->first;
-      //cerr << "Asking for node " << vId << endl;
+      if (debug) cout << "Asking for node " << vId << endl;
       gmsg->closures[i] = vId;
       i++;
     }

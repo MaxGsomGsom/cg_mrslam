@@ -72,14 +72,16 @@ void GraphComm2::sendToThrd() {
                 cg_mrslam::SLAM dslamMsg;
                 _rh->createDSlamMsg(cmsg, dslamMsg);
                 _pubsSentReal2.at(i).publish(dslamMsg);
+                cout << "# Sent combo message to: " << i << endl;
              }
 
              //CondensedGraphMessage
-             CondensedGraphMessage* gmsg = _gslam->constructCondensedGraphMessage(1);
+             CondensedGraphMessage* gmsg = _gslam->constructCondensedGraphMessage(i);
              if (gmsg) {
                  cg_mrslam::SLAM dslamMsg;
                  _rh->createDSlamMsg(gmsg, dslamMsg);
                  _pubsSentReal2.at(i).publish(dslamMsg);
+                 cout << "# Sent CondensedGraph message to: " << i << endl;
              }
          }
      }
@@ -89,7 +91,7 @@ void GraphComm2::sendToThrd() {
 
 void GraphComm2::receiveFromThrd(cg_mrslam::SLAM dslamMsg){
 
-    fprintf(stderr, "Received info from: %i\n", dslamMsg.robotId);
+    cout << "# Received message from: " << dslamMsg.robotId << endl;
 
     StampedRobotMessage vmsg;
     RobotMessage* rmsg;
@@ -109,7 +111,9 @@ void GraphComm2::processQueueThrd(){
       boost::mutex::scoped_lock lock(_queueMutex);
 
       StampedRobotMessage vmsg = _queue.front();
+
       _gslam->addInterRobotData(vmsg);
+      cout << "==========" << endl;
 
       _queue.pop();
     }else
