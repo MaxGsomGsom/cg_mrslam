@@ -28,6 +28,8 @@
 
 #include "graph_comm2.h"
 #include <string>
+#include "definitions.h"
+
 GraphComm2::GraphComm2 (MRGraphSLAM* gslam, int idRobot, int nRobots, RosHandler* rh){
 
   _idRobot = idRobot;
@@ -40,11 +42,14 @@ GraphComm2::GraphComm2 (MRGraphSLAM* gslam, int idRobot, int nRobots, RosHandler
 
 void GraphComm2::init_threads(){
 
-  _subRecvReal2 = _rh->GetNodeHandle().subscribe<cg_mrslam::SLAM>("/mrslam_msgs_r" + to_string(_idRobot), 1,  &GraphComm2::receiveFromThrd, this);
+  for (int i=0; i<_nRobots; i++) {
+     if (i!=_idRobot)
+        _subRecvReal2.push_back(_rh->GetNodeHandle().subscribe<cg_mrslam::SLAM>("/" + _ns + to_string(i) + "/mrslam_msgs_r" + to_string(_idRobot), 100,  &GraphComm2::receiveFromThrd, this));
+  }
 
   for (int i=0; i<_nRobots; i++) {
      if (i!=_idRobot)
-        _pubsSentReal2.push_back(_rh->GetNodeHandle().advertise<cg_mrslam::SLAM>("/mrslam_msgs_r" + to_string(i), 1));
+        _pubsSentReal2.push_back(_rh->GetNodeHandle().advertise<cg_mrslam::SLAM>("/" + _ns + to_string(_idRobot) + "/mrslam_msgs_r" + to_string(i), 100));
      else _pubsSentReal2.push_back(ros::Publisher());
   }
 
@@ -65,14 +70,15 @@ void GraphComm2::sendToThrd() {
      }
 
      for (size_t i = 0; i < _nRobots; i++) {
-         if (i != _idRobot) {
+         //send only if receiver subscribed to topic
+         if (i != _idRobot && _pubsSentReal2.at(i).getNumSubscribers() > 0) {
 
              //ComboMessage
              if (cmsg != nullptr){
                 cg_mrslam::SLAM dslamMsg;
                 _rh->createDSlamMsg(cmsg, dslamMsg);
                 _pubsSentReal2.at(i).publish(dslamMsg);
-                cout << "# Sent combo message to: " << i << endl;
+                ROS_INFO_STREAM("Sent ComboMessage to: " << i);
              }
 
              //CondensedGraphMessage
@@ -81,17 +87,17 @@ void GraphComm2::sendToThrd() {
                  cg_mrslam::SLAM dslamMsg;
                  _rh->createDSlamMsg(gmsg, dslamMsg);
                  _pubsSentReal2.at(i).publish(dslamMsg);
-                 cout << "# Sent CondensedGraph message to: " << i << endl;
+                 ROS_INFO_STREAM("Sent CondensedGraph message to: " << i);
              }
          }
      }
-     usleep(150000);
+     usleep(1000000); //1 sec
   }
 }
 
 void GraphComm2::receiveFromThrd(cg_mrslam::SLAM dslamMsg){
 
-    cout << "# Received message from: " << dslamMsg.robotId << endl;
+    ROS_INFO_STREAM("Received message from: " << dslamMsg.robotId);
 
     StampedRobotMessage vmsg;
     RobotMessage* rmsg;
@@ -101,21 +107,20 @@ void GraphComm2::receiveFromThrd(cg_mrslam::SLAM dslamMsg){
 
     boost::mutex::scoped_lock lock(_queueMutex);
     _queue.push(vmsg);
-
 }
 
 void GraphComm2::processQueueThrd(){
 
   while(1){
     if (!_queue.empty()){
-      boost::mutex::scoped_lock lock(_queueMutex);
 
+      boost::mutex::scoped_lock lock(_queueMutex);
       StampedRobotMessage vmsg = _queue.front();
+      _queue.pop();
+      lock.unlock();
 
       _gslam->addInterRobotData(vmsg);
-      cout << "==========" << endl;
 
-      _queue.pop();
     }else
       usleep(10000);
   }

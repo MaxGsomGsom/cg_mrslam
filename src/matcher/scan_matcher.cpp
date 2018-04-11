@@ -29,6 +29,7 @@
 #include <limits>
 #include "scan_matcher.h"
 #include <iostream>
+#include "definitions.h"
 using namespace std;
 
 ScanMatcher::ScanMatcher() :_grid(Eigen::Vector2f(-15, -15), Eigen::Vector2f(15, 15), 0.025, 128){
@@ -129,7 +130,7 @@ bool ScanMatcher::closeScanMatching(OptimizableGraph::VertexSet& vset, Optimizab
   RawLaser::Point2DVector cvscan = lasercv->cartesian();
   Vector2dVector reducedCvscan;
   CharGrid::subsample(reducedCvscan, cvscan, 0.1);
-  //cerr << "subsampling: " << cvscan.size() << " -> " << reducedCvscan.size() << endl;
+  //cout << "subsampling: " << cvscan.size() << " -> " << reducedCvscan.size() << endl;
 
   SE2 laserPoseCV = lasercv->laserParams().laserPose;
   RawLaser::Point2DVector cvScanRobot;
@@ -158,7 +159,7 @@ bool ScanMatcher::closeScanMatching(OptimizableGraph::VertexSet& vset, Optimizab
     Eigen::Vector3d adj=mresvec[0].transformation;
     trel->setTranslation(Eigen::Vector2d(adj.x(), adj.y()));
     trel->setRotation(Eigen::Rotation2Dd(adj.z()));
-    //cerr <<  "bestScore = " << mresvec[0].score << endl << endl; 
+    //cout <<  "bestScore = " << mresvec[0].score << endl << endl;
 
     // if (currentVertex->id() > 120 && currentVertex->id() < 200){
     //   CharMatcher auxGrid = _grid;
@@ -183,7 +184,7 @@ bool ScanMatcher::closeScanMatching(OptimizableGraph::VertexSet& vset, Optimizab
 
     return true;
   } 
-  cerr << endl;
+  if (DEBUG) cout << endl;
   return false;
 
 }
@@ -199,8 +200,8 @@ bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  Op
 
 
 bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  OptimizableGraph::Vertex* _referenceVertex, OptimizableGraph::VertexSet& currvset, OptimizableGraph::Vertex* _currentVertex,  std::vector<SE2>& trel, double maxScore){ 
-  cerr << "Loop Closing Scan Matching" << endl;
-  //cerr << "Size of Vset " << referenceVset.size() << endl;
+  if (DEBUG) cout << "Loop Closing Scan Matching" << endl;
+  //cout << "Size of Vset " << referenceVset.size() << endl;
   VertexSE2* referenceVertex =dynamic_cast<VertexSE2*>(_referenceVertex);
 
   resetGrid();
@@ -215,7 +216,7 @@ bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  Op
 
   Vector2dVector reducedScans;
   CharGrid::subsample(reducedScans, scansInCurVertex, 0.1);
-  //cerr << "subsampling: " << scansInCurVertex.size() << " -> " << reducedScans.size() << endl;
+  //cout << "subsampling: " << scansInCurVertex.size() << " -> " << reducedScans.size() << endl;
 
   RegionVector regions;
   RegionVector regionspi;
@@ -258,7 +259,7 @@ bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  Op
   
   if (mresvec.size()){
     mresvec[0].transformation[2] = normalize_theta(mresvec[0].transformation[2]);
-    cerr << "Found Loop Closure Edge. Transf: " << mresvec[0].transformation.x() << " " << mresvec[0].transformation.y() << " " << mresvec[0].transformation.z() << endl;
+    if (DEBUG) cout << "Found Loop Closure Edge. Transf: " << mresvec[0].transformation.x() << " " << mresvec[0].transformation.y() << " " << mresvec[0].transformation.z() << endl;
 
     CharGrid::addToPrunedMap(resultsMap, mresvec[0], dx, dy, dth);
   }
@@ -271,7 +272,7 @@ bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  Op
 
   if (mresvec.size()){
     mresvec[0].transformation[2] = normalize_theta(mresvec[0].transformation[2]);
-    cerr << "Found Loop Closure Edge PI. Transf: " << mresvec[0].transformation.x() << " " << mresvec[0].transformation.y() << " " << mresvec[0].transformation.z() << endl;
+    if (DEBUG) cout << "Found Loop Closure Edge PI. Transf: " << mresvec[0].transformation.x() << " " << mresvec[0].transformation.y() << " " << mresvec[0].transformation.z() << endl;
 
     CharGrid::addToPrunedMap(resultsMap, mresvec[0], dx, dy, dth);
   }
@@ -284,7 +285,7 @@ bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  Op
     transf.setRotation(Eigen::Rotation2Dd(adj.z()));
     trel.push_back(transf);
     
-    std::cerr << "Final result: " << transf.translation().x() << " " << transf.translation().y() << " " << transf.rotation().angle() << std::endl;
+    if (DEBUG) cout << "Final result: " << transf.translation().x() << " " << transf.translation().y() << " " << transf.rotation().angle() << std::endl;
   }
 
   if (trel.size())
@@ -294,8 +295,8 @@ bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  Op
 }
 
 bool ScanMatcher::scanMatchingLChierarchical(OptimizableGraph::VertexSet& referenceVset,  OptimizableGraph::Vertex* _referenceVertex, OptimizableGraph::VertexSet& currvset, OptimizableGraph::Vertex* _currentVertex,  std::vector<SE2>& trel, double maxScore){ 
-  //cerr << "Loop Closing Scan Matching" << endl;
-  //cerr << "Size of Vset " << referenceVset.size() << endl;
+  //cout << "Loop Closing Scan Matching" << endl;
+  //cout << "Size of Vset " << referenceVset.size() << endl;
   VertexSE2* currentVertex=dynamic_cast<VertexSE2*>(_currentVertex);
   VertexSE2* referenceVertex =dynamic_cast<VertexSE2*>(_referenceVertex);
 
@@ -311,7 +312,7 @@ bool ScanMatcher::scanMatchingLChierarchical(OptimizableGraph::VertexSet& refere
 
   Vector2dVector reducedScans;
   CharGrid::subsample(reducedScans, scansInCurVertex, 0.1);
-  //cerr << "subsampling: " << scansInCurVertex.size() << " -> " << reducedScans.size() << endl;
+  //cout << "subsampling: " << scansInCurVertex.size() << " -> " << reducedScans.size() << endl;
 
   SE2 delta = referenceVertex->estimate().inverse() * currentVertex->estimate();
 
@@ -343,8 +344,8 @@ bool ScanMatcher::scanMatchingLChierarchical(OptimizableGraph::VertexSet& refere
     SE2 transf;
     transf.setTranslation(Eigen::Vector2d(adj.x(), adj.y()));
     transf.setRotation(Eigen::Rotation2Dd(adj.z()));
-    //    cerr <<  " bestScore = " << mresvec[0].score << endl; 
-    //cerr << "Found Loop Closure Edge. Transf: " << adj.x() << " " << adj.y() << " " << adj.z() << endl << endl;
+    //    cout <<  " bestScore = " << mresvec[0].score << endl;
+    //cout << "Found Loop Closure Edge. Transf: " << adj.x() << " " << adj.y() << " " << adj.z() << endl << endl;
 
     trel.push_back(transf);
   }
@@ -379,7 +380,7 @@ bool ScanMatcher::globalMatching(OptimizableGraph::VertexSet& referenceVset, Opt
   //double secs;
 
   //t_ini = clock();
-  //cerr << "Hierarchical Search: " << endl;
+  //cout << "Hierarchical Search: " << endl;
 
   double thetaRes = 0.025;
   Eigen::Vector3f lower(- 10, - 5, -M_PI);
@@ -387,19 +388,19 @@ bool ScanMatcher::globalMatching(OptimizableGraph::VertexSet& referenceVset, Opt
 
   Vector2dVector reducedScans;
   CharGrid::subsample(reducedScans, scansInCurVertex, 0.1);
-  //cerr << "subsampling: " << scansInCurVertex.size() << " -> " << reducedScans.size() << endl;
+  //cout << "subsampling: " << scansInCurVertex.size() << " -> " << reducedScans.size() << endl;
   _grid.hierarchicalSearch(mresvec, reducedScans, lower, upper, thetaRes, maxScore, 0.5, 0.5, 0.2, 4);
   
   //t_fin = clock();
 
   //secs = (double)(t_fin - t_ini) / CLOCKS_PER_SEC;
   //printf("%.16g ms\n", secs * 1000.0);
-  //cerr << "matcher results: " << mresvec.size();
+  //cout << "matcher results: " << mresvec.size();
   if (mresvec.size()){
     Eigen::Vector3d adj=mresvec[0].transformation;
     trel->setTranslation(Eigen::Vector2d(adj.x(), adj.y()));
     trel->setRotation(Eigen::Rotation2Dd(adj.z()));
-    //cerr <<  " bestScore = " << mresvec[0].score << endl; 
+    //cout <<  " bestScore = " << mresvec[0].score << endl;
 
     // CharMatcher auxGrid = _LCGrid;
 
@@ -423,7 +424,7 @@ bool ScanMatcher::globalMatching(OptimizableGraph::VertexSet& referenceVset, Opt
     // auxGrid.grid().saveAsPPM(image, false);
     return true;
   } 
-  //cerr << endl;
+  //cout << endl;
   return false;
 }
 
@@ -495,7 +496,7 @@ bool ScanMatcher::verifyMatching(OptimizableGraph::VertexSet& vset1, Optimizable
   Eigen::Vector2f upper(+.3+trel12.translation().x(), +.3+trel12.translation().y()); 
   
   auxGrid.countPoints(lower, upper, score);
-  cerr << "Score: " << *score << endl;
+  if (DEBUG) cout << "Score: " << *score << endl;
   double threshold = 40.0;
   if (*score <= threshold)
     return true;

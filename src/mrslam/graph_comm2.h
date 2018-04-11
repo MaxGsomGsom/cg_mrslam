@@ -56,6 +56,7 @@ class GraphComm2
 
   int _idRobot;
   int _nRobots;
+  string _ns = "robot";
 
   ///////////////
   msgQueue _queue;
@@ -68,7 +69,7 @@ class GraphComm2
   boost::thread sthread;
   boost::thread pthread;
 
-  ros::Subscriber _subRecvReal2;
+  vector<ros::Subscriber> _subRecvReal2;
   vector<ros::Publisher> _pubsSentReal2;
 };
 

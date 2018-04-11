@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "graph_comm.h"
+#include "definitions.h"
 
 GraphComm::GraphComm (MRGraphSLAM* gslam, int idRobot, int nRobots, std::string base_addr, TypeExperiment typeExperiment){
   _typeExperiment = typeExperiment;
@@ -40,7 +41,7 @@ GraphComm::GraphComm (MRGraphSLAM* gslam, int idRobot, int nRobots, std::string 
 
   std::stringstream my_addr;
   my_addr << base_addr << idRobot+1;
-  std::cerr << "My address: " << my_addr.str() << std::endl;
+  ROS_INFO_STREAM("My address: " << my_addr.str());
 
   _iSock = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
 
@@ -114,7 +115,7 @@ void GraphComm::send(RobotMessage* cmsg, int rto){
   size_t sizebufc = (c) ? (c-bufferc):0;
  
   if (sizebufc){
-    std::cerr << "Send info to robot: " << rto << ". Address: " << to_addr.str() << ". Sent: " << sizebufc  << " bytes" << std::endl;
+    if (DEBUG) cout << "[MR] " << "Send info to robot: " << rto << ". Address: " << to_addr.str() << ". Sent: " << sizebufc  << " bytes" << endl;
     sendto(_iSock, &bufferc, sizebufc, 0, (struct sockaddr*) &toSockAddr, sizeof(toSockAddr));
     if (_typeExperiment == REAL)
       _rh->publishSentMsg(cmsg);

@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
 #include "mr_closure_buffer.h"
+#include "definitions.h"
 
 ClosureBuffer* MRClosureBuffer::findClosuresRobot(int robotId){
   std::map<int, ClosureBuffer*>::iterator it = mrClosures.find(robotId);
@@ -62,8 +63,6 @@ void MRClosureBuffer::remove(ClosureBuffer& closures, int robotId){
     for (OptimizableGraph::VertexIDMap::iterator itv =closures.vertices().begin(); itv!=closures.vertices().end(); ++itv){
       //For each vertex in closures
       OptimizableGraph::Vertex* v= (OptimizableGraph::Vertex*)(itv->second);
-
-      std::cout << "Removing vertex:" << v->id() << std::endl;
       previousBuffer->removeVertex(v);
     }
 

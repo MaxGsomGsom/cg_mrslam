@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "msg_factory.h"
+#include "definitions.h"
 
 char* RobotMessage::toCharArray(char* buffer, size_t bsize, bool skipHeader) const {
   char* c = buffer;
@@ -304,7 +305,7 @@ RobotMessage* MessageFactory::fromCharArray(const char* buf, size_t size) {
   _fromCharArray(type, buf);
   const char* c = buf;
   RobotMessage* msg = constructMessage(type);
-  cerr << "constructing a message of type" << type << endl;
+  if(DEBUG) cout << "constructing a message of type" << type << endl;
   c = msg->fromCharArray(c);
   assert((c-buf)==size);
   return msg;

@@ -1,4 +1,5 @@
 #include "graph2occupancy.h"
+#include "definitions.h"
 
 using namespace std;
 using namespace Eigen;
@@ -91,7 +92,7 @@ void Graph2occupancy::computeMap(){
 
 
   if(robotLasers.size() == 0)  {
-    std::cout << "No laser scans found ... quitting!" << std::endl;
+    if (DEBUG) std::cout << "No laser scans found ... quitting!" << std::endl;
     return;
   }
 
@@ -112,7 +113,7 @@ void Graph2occupancy::computeMap(){
 
 
   if(size.x() == 0 || size.y() == 0) {
-    std::cout << "Zero map size ... quitting!" << std::endl;
+    if (DEBUG) std::cout << "Zero map size ... quitting!" << std::endl;
     return;
   }
 

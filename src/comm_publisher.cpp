@@ -10,8 +10,10 @@
 #include "g2o/stuff/command_args.h"
 
 #include "cg_mrslam/Ping.h"
+#include "definitions.h"
 
 using namespace g2o;
+using namespace std;
 
 class CommPublisher{
 public: 
@@ -37,13 +39,13 @@ public:
 	toSockAddr.sin_port=htons(42001);
 
 	std::string msg = "I am robot " + std::to_string(_idRobot); 
-	std::cerr << "Sending to robot: " << r << std::endl;
+    if (DEBUG) cout << "[MR] " << "Sending to robot: " << r << std::endl;
 	sendto(_iSock, msg.c_str(), strlen(msg.c_str())+1, 0, (struct sockaddr*) &toSockAddr, sizeof(toSockAddr));
       }
     
       usleep(250000);
     }
-    std::cerr << "Send thread finished." << std::endl;
+    if (DEBUG) cout << "[MR] " << "Send thread finished." << std::endl;
     stop();
   }
 
@@ -60,16 +62,16 @@ public:
       char ipAddress[INET_ADDRSTRLEN];
 
       inet_ntop(AF_INET, &(fromSockAddr.sin_addr.s_addr), ipAddress, INET_ADDRSTRLEN);
-      std::cerr << "Received from: " << ipAddress << std::endl;
+      if (DEBUG) cout << "[MR] " << "Received from: " << ipAddress << std::endl;
       int a,b,c,d,idRobotFrom;
       sscanf(ipAddress, "%d.%d.%d.%d", &a,&b,&c,&d);
       idRobotFrom = d-1;
-      std::cerr << "Robot id: " << idRobotFrom << std::endl;
+      if (DEBUG) cout << "[MR] " << "Robot id: " << idRobotFrom << std::endl;
 
       if (nbytes == 0) //Connection was shutdown
 	break;
 
-      std::cerr << "Received: " << buffer << std::endl;
+      if (DEBUG) cout << "[MR] " << "Received: " << buffer << std::endl;
       
       cg_mrslam::Ping pingmsg;
       pingmsg.header.stamp = ros::Time::now();
@@ -78,13 +80,13 @@ public:
   
       _pubPing.publish(pingmsg);
     }
-    std::cerr << "Receive thread finished." << std::endl;
+    if (DEBUG) cout << "[MR] " << "Receive thread finished." << std::endl;
   }
 
   void init(){
     //Setting up network
     std::string my_addr = _baseAddr+std::to_string(_idRobot+1);
-    std::cerr << "My address: " << my_addr << std::endl;
+    if (DEBUG) cout << "[MR] " << "My address: " << my_addr << std::endl;
     _iSock = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
 
     struct sockaddr_in sockAddr;
@@ -99,9 +101,9 @@ public:
     _pubPing = _n.advertise<cg_mrslam::Ping>("ping_msgs", 1);
 
     //Start threads
-    std::cerr << "creating send thread for robot " << _idRobot << std::endl;
+    if (DEBUG) cout << "[MR] " << "creating send thread for robot " << _idRobot << std::endl;
     _sendThread = std::thread(&CommPublisher::sendToThread, this);
-    std::cerr << "creating receive thread for robot " << _idRobot << std::endl;
+    if (DEBUG) cout << "[MR] " << "creating receive thread for robot " << _idRobot << std::endl;
     _receiveThread = std::thread(&CommPublisher::receiveFromThread, this);
 
     _sendThread.join();
@@ -110,7 +112,7 @@ public:
 
   void stop(){
     //Closing socket
-    std::cerr << "Closing socket" << std::endl;
+    if (DEBUG) cout << "[MR] " << "Closing socket" << std::endl;
     //close(_iSock);
     shutdown(_iSock, SHUT_RDWR);
   }
@@ -150,6 +152,6 @@ int main(int argc, char **argv){
 
   ros::spin();
 
-  std::cerr << "Finished" << std::endl;
+  if (DEBUG) cout << "[MR] " << "Finished" << std::endl;
 
 }

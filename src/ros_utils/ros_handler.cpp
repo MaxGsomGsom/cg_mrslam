@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ros_handler.h"
+#include "definitions.h"
 
 RosHandler::RosHandler (int idRobot, int nRobots, TypeExperiment typeExperiment){
 
@@ -52,13 +53,13 @@ RosHandler::RosHandler (int idRobot, int nRobots, TypeExperiment typeExperiment)
   std::string delimiter = "_";
   _rootns = fullns.substr(0, fullns.find(delimiter));
 
-  std::cerr << "NAMESPACE: " << fullns << std::endl;
-  std::cerr << "ROOT NAMESPACE: " << _rootns << std::endl;
+  ROS_INFO_STREAM("NAMESPACE: " << fullns);
+  //ROS_INFO_STREAM("ROOT NAMESPACE: " << _rootns);
 }
 
 void RosHandler::pingCallback(const cg_mrslam::Ping::ConstPtr& msg){
   int robot = msg->robotFrom;
-  std::cerr << "Received Ping from robot " << robot << std::endl;
+  if (DEBUG) cout << "[MR] " << "Received Ping from robot " << robot << endl;
   
   _timeLastPing[robot] = ros::Time::now();
 }
@@ -136,7 +137,7 @@ void RosHandler::init(){
       ros::Duration(1.0).sleep();
     }
 
-    std::cerr << "Robot-laser transform: (" << _trobotlaser.translation().x() << ", " << _trobotlaser.translation().y() << ", " << _trobotlaser.rotation().angle() << ")" << std::endl;
+    if (DEBUG) cout << "[MR] " << "Robot-laser transform: (" << _trobotlaser.translation().x() << ", " << _trobotlaser.translation().y() << ", " << _trobotlaser.rotation().angle() << ")" << endl;
   }
 
   if (_typeExperiment == SIM){
@@ -207,7 +208,7 @@ void RosHandler::createComboMsg(ComboMessage* cmsg, cg_mrslam::SLAM& dslamMsg){
     dslamMsg.vertices[i].id = cmsg->vertexVector[i].id;
     dslamMsg.vertices[i].estimate[0] = cmsg->vertexVector[i].estimate[0];
     dslamMsg.vertices[i].estimate[1] = cmsg->vertexVector[i].estimate[1];
-    dslamMsg.vertices[i].estimate[2] = cmsg->vertexVector[i].estimate[2];   
+    dslamMsg.vertices[i].estimate[2] = cmsg->vertexVector[i].estimate[2];
   }
 }
 
@@ -296,10 +297,11 @@ void RosHandler::createDSlamMsg(RobotMessage* msg, cg_mrslam::SLAM& dslamMsg){
 }
 
 void RosHandler::restoreDSlamMsg(RobotMessage** msg, cg_mrslam::SLAM& dslamMsg){
-  if (dslamMsg.vertices.size() > 0)
+  if (dslamMsg.type == 4)
     restoreComboMsg(msg, dslamMsg);
-  if (dslamMsg.edges.size() > 0)
+  else if (dslamMsg.type == 7) {
     restoreCondensedGraphMsg(msg, dslamMsg);
+  }
 }
 
 void RosHandler::publishSentMsg(RobotMessage* msg){

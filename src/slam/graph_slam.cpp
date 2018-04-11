@@ -28,6 +28,7 @@
 
 #include "graph_slam.h"
 #include "graph_manipulator.h"
+#include "definitions.h"
 
 GraphSLAM::GraphSLAM():_vf(0){ 
   _firstRobotPose = 0; 
@@ -60,7 +61,7 @@ void GraphSLAM::init(double resolution, double kernelRadius, int windowLoopClosu
   _closeMatcher.initializeGrid(Eigen::Vector2f(-15, -15), Eigen::Vector2f(15, 15), resolution);
   _LCMatcher.initializeKernel(0.1, 0.5); //before 0.1, 0.5
   _LCMatcher.initializeGrid(Eigen::Vector2f(-35, -35), Eigen::Vector2f(35, 35), 0.1); //before 0.1
-  cerr << "Grids initialized\n";
+  if (DEBUG) cout << "Grids initialized" << endl;
 
 
   windowLoopClosure = windowLoopClosure_;
@@ -101,7 +102,7 @@ void GraphSLAM::setInitialData(SE2 initialTruePose, SE2 initialOdom, RobotLaser*
   //_lastVertex->setUserData(ellipse);
   _lastVertex->setUserData(laser);
   
-  std::cout << 
+  if (DEBUG) std::cout <<
     "Initial vertex: " << _lastVertex->id() << 
     " Estimate: "<< _lastVertex->estimate().translation().x() << 
     " " << _lastVertex->estimate().translation().y() << 
@@ -130,7 +131,7 @@ void GraphSLAM::setInitialData(SE2 initialOdom, RobotLaser* laser){
   //_lastVertex->setUserData(ellipse);
   _lastVertex->addUserData(laser);
 
-  std::cout << 
+  if (DEBUG) std::cout <<
     "Initial vertex: " << _lastVertex->id() << 
     " Estimate: "<< _lastVertex->estimate().translation().x() << 
     " " << _lastVertex->estimate().translation().y() << 
@@ -160,7 +161,7 @@ void GraphSLAM::addData(SE2 currentOdom, RobotLaser* laser){
   //v->setUserData(ellipse);
   v->addUserData(laser);
 
-  std::cout <<
+  if (DEBUG) std::cout <<
     "Current vertex: " << v->id() << 
     ". Estimate: "<< v->estimate().translation().x() <<
     " " << v->estimate().translation().y() << 
@@ -212,7 +213,7 @@ void GraphSLAM::addDataSM(SE2 currentOdom, RobotLaser* laser){
   //v->setUserData(ellipse);
   v->addUserData(laser);
 
-  std::cout <<
+  if (DEBUG) std::cout <<
     "Current vertex: " << v->id() << 
     ". Estimate: "<< v->estimate().translation().x() <<
     " " << v->estimate().translation().y() << 
@@ -456,7 +457,7 @@ void GraphSLAM::findConstraints(){
 	  _SMEdges.insert(ne);
 	}
       }else {
-	std::cout << "Rejecting LC edge between " << closestV->id() << " and " << _lastVertex->id() << " [matching fail] " << std::endl;
+    if (DEBUG) std::cout << "Rejecting LC edge between " << closestV->id() << " and " << _lastVertex->id() << " [matching fail] " << std::endl;
       }
     }else{
       //Edge between close vertices
@@ -472,7 +473,7 @@ void GraphSLAM::findConstraints(){
 	_graph->addEdge(ne);
 	_SMEdges.insert(ne);
       }else {
-	std::cout << "Rejecting edge between " << closestV->id() << " and " << _lastVertex->id() << " [matching fail] " << std::endl;
+    if (DEBUG) std::cout << "Rejecting edge between " << closestV->id() << " and " << _lastVertex->id() << " [matching fail] " << std::endl;
       }
     }
   }
@@ -492,7 +493,7 @@ void GraphSLAM::addClosures(OptimizableGraph::EdgeSet loopClosingEdges){
 
 void GraphSLAM::checkClosures(){
   if (_closures.checkList(windowLoopClosure)){
-    cout << endl << "Loop Closure Checking." << endl;
+    if (DEBUG) cout << endl << "Loop Closure Checking." << endl;
     // for(std::list<VertexTime>::iterator it = _closures.vertexList().begin(); it!= _closures.vertexList().end(); it++){
     //   VertexTime vt = *it;
     //   cout << "In list: Vertex: "  << vt.v->id() << " time: " << vt.time << endl;
@@ -513,21 +514,21 @@ void GraphSLAM::checkClosures(){
     // }
 
 
-    cout << "Best Chi2 = " << lcc.chi2() << endl;
-    cout << "Inliers = " << lcc.inliers() << endl;
+    if (DEBUG) cout << "Best Chi2 = " << lcc.chi2() << endl;
+    if (DEBUG) cout << "Inliers = " << lcc.inliers() << endl;
 
     if (lcc.inliers() >= minInliers){
       LoopClosureChecker::EdgeDoubleMap results = lcc.closures();
-      cout << "Results:" << endl;
+      if (DEBUG) cout << "Results:" << endl;
       for (LoopClosureChecker::EdgeDoubleMap::iterator it= results.begin(); it!= results.end(); it++){
 	EdgeSE2* e = (EdgeSE2*) (it->first);
-    cout << "Edge from: " << e->vertices()[0]->id() << " to: " << e->vertices()[1]->id() << ". Chi2 = " << it->second;
+    if (DEBUG) cout << "Edge from: " << e->vertices()[0]->id() << " to: " << e->vertices()[1]->id() << ". Chi2 = " << it->second;
 
 	if (it->second < inlierThreshold){
-        cout << ". Inlier. Adding to Graph";
+        if (DEBUG) cout << ". Inlier. Adding to Graph" << endl;
 	  _graph->addEdge(e);
 	}
-    cout << endl;
+    else if (DEBUG) cout << endl;
       }
     }
   }

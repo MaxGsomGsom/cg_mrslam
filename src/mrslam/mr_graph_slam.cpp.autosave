@@ -342,7 +342,7 @@ void MRGraphSLAM::addInterRobotData(CondensedGraphMessage* gmsg){
       if (DEBUG) cout << nodeId << " ";
       OptimizableGraph::Vertex* v=graph()->vertex(nodeId);
       if (v)
-	closures.insert(std::make_pair(nodeId,v));
+        closures.insert(std::make_pair(nodeId,v));
     }
     if (DEBUG) cout << endl;
 

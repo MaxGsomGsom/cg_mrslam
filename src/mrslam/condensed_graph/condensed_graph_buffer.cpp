@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "condensed_graph_buffer.h"
+#include "definitions.h"
 
 SparseOptimizer* clone(SparseOptimizer* graph, int level){
   SparseOptimizer * subgraph = new SparseOptimizer;
@@ -282,7 +283,7 @@ OptimizableGraph::Vertex* CondensedGraphBuffer::selectOptimalGauge(OptimizableGr
     }
   }
 
-  std::cerr << "Best Gauge: " << bestGauge->id() << "Best uncertainty: " << bestUncertainty << std::endl;
+  if (DEBUG) std::cout << "Best Gauge: " << bestGauge->id() << "Best uncertainty: " << bestUncertainty << std::endl;
 
   return bestGauge;
 }

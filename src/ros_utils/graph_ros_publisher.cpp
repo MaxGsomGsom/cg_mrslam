@@ -111,6 +111,5 @@ void GraphRosPublisher::publishTransformThread(){
     loop_rate.sleep();
   }
   
-  std::cerr << "Publish Transform thread finished." << std::endl;
-
+  ROS_INFO_STREAM("Publish Transform thread finished.");
 }
