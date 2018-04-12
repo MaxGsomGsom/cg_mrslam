@@ -153,7 +153,7 @@ bool ScanMatcher::closeScanMatching(OptimizableGraph::VertexSet& vset, Optimizab
   t_fin = clock();
 
   secs = (double)(t_fin - t_ini) / CLOCKS_PER_SEC;
-  printf("Greedy search: %.16g ms. Matcher results: %i\n", secs * 1000.0, (int) mresvec.size());
+  if (DEBUG) printf("Greedy search: %.16g ms. Matcher results: %i\n", secs * 1000.0, (int) mresvec.size());
 
   if (mresvec.size()){
     Eigen::Vector3d adj=mresvec[0].transformation;

@@ -28,6 +28,7 @@
 
 #include "mr_graph_slam.h"
 #include "definitions.h"
+#include <ros/ros.h>
 
 
 MRGraphSLAM::MRGraphSLAM() :condensedGraphs(GraphSLAM::graph()), 
@@ -77,15 +78,13 @@ void MRGraphSLAM::checkInterRobotClosures(){
 	if (lcc.inliers() >= minInliersMR){
 	  OptimizableGraph::VertexIDMap inClosures;
 	  LoopClosureChecker::EdgeDoubleMap results = lcc.closures();
-      if (DEBUG) cout << "[MR] " << "Results:" << endl;
 	  for (LoopClosureChecker::EdgeDoubleMap::iterator it= results.begin(); it!= results.end(); it++){
 	    EdgeSE2* e = (EdgeSE2*) (it->first);
 	    VertexSE2* vto=dynamic_cast<VertexSE2*>(e->vertices()[1]);
-        if (DEBUG) cout << "[MR] " << "Edge from: " << e->vertices()[0]->id() << " to: " << vto->id() << ". Chi2 = " << it->second;
 
 	    if (it->second < inlierThreshold){
-          if (DEBUG) cout << ". Inlier. Adding to Graph";
-          if (DEBUG) cout << endl;
+           if (DEBUG) cout << "[MR] " << "Added edge from: " << e->vertices()[0]->id() << " to: " << vto->id() << ". Chi2 = " << it->second << endl;
+           else ROS_INFO_STREAM("Added edge from: " << e->vertices()[0]->id() << " to: " << vto->id());
 
 	      e->setId(++_runningEdgeId + _baseId); 
 	      _graph->addEdge(e);
@@ -216,14 +215,14 @@ void MRGraphSLAM::addInterRobotData(ComboMessage* cmsg, OptimizableGraph::Vertex
     bool shouldIAdd = _LCMatcher.globalMatching(referenceVset, referenceVertex, vset, v, &transf, maxScoreMR);
     
     if (shouldIAdd){
-      if (DEBUG) cout << "[MR] " << "Found inter robot match" << endl;
+      if (DEBUG) cout << "[MR] " << "Found match " << v->id() << " = " << referenceVertex->id() << endl;
 
       if (detectRobotInRange){
 	double score;
 	bool robotDetected = _LCMatcher.verifyMatching(referenceVset, referenceVertex, vset, v, transf, &score); 
 
 	if (!robotDetected){
-      if (DEBUG) cout << "[MR] " << "No robots detected in the range" << endl;
+      if (DEBUG) cout << "[MR] " << "No robots detected in the range. Matching " << v->id() << " failed" << endl;
 	  return;
 	}
       }
@@ -289,7 +288,7 @@ void MRGraphSLAM::findInterRobotConstraints(){
       SE2 transf;
       bool shouldIAdd = _LCMatcher.globalMatching(referenceVset, referenceVertex, v, &transf, maxScoreMR);
       if (shouldIAdd){
-    if (DEBUG) cout << "[MR] " << "Removing found match vertex " << v->id() << endl;
+    if (DEBUG) cout << "[MR] " << "Found match vertex " << v->id() << " = " << referenceVertex->id() << endl;
 
 	if (detectRobotInRange){
 	  double score;
@@ -298,7 +297,7 @@ void MRGraphSLAM::findInterRobotConstraints(){
 	  bool robotDetected = _LCMatcher.verifyMatching(referenceVset, referenceVertex, vset, v, transf, &score);
 	  
 	  if (!robotDetected){
-        if (DEBUG) cout << "[MR] " << "No robots detected in the range" << endl;
+        if (DEBUG) cout << "[MR] " << "No robots detected in the range. Matching " << v->id() << " failed" << endl;
 	    continue;
 	  } 
 	}
