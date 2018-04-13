@@ -74,6 +74,7 @@ void MRGraphSLAM::checkInterRobotClosures(){
 
     if (DEBUG) cout << "[MR] " << "Best chi2 = " << lcc.chi2() << endl;
     if (DEBUG) cout << "[MR] " << "Inliers = " << lcc.inliers() << endl;
+    if (DEBUG) cout << "[MR] " << "Added edges: ";
 
 	if (lcc.inliers() >= minInliersMR){
 	  OptimizableGraph::VertexIDMap inClosures;
@@ -83,8 +84,8 @@ void MRGraphSLAM::checkInterRobotClosures(){
 	    VertexSE2* vto=dynamic_cast<VertexSE2*>(e->vertices()[1]);
 
 	    if (it->second < inlierThreshold){
-           if (DEBUG) cout << "[MR] " << "Added edge from: " << e->vertices()[0]->id() << " to: " << vto->id() << ". Chi2 = " << it->second << endl;
-           else ROS_INFO_STREAM("Added edge from: " << e->vertices()[0]->id() << " to: " << vto->id());
+           if (DEBUG) cout << e->vertices()[0]->id() << "->" << vto->id() << " ";
+           else ROS_INFO_STREAM("Added edge: " << e->vertices()[0]->id() << "->" << vto->id());
 
 	      e->setId(++_runningEdgeId + _baseId); 
 	      _graph->addEdge(e);
@@ -102,6 +103,8 @@ void MRGraphSLAM::checkInterRobotClosures(){
 	      inClosures.insert(std::make_pair(vto->id(), vto));
 	    }
 	  }
+      if (DEBUG) cout << endl;
+
 	  if (inClosures.size())
 	    condensedGraphs.insertInClosure(robotId, inClosures);
 	}
@@ -356,7 +359,7 @@ void MRGraphSLAM::addInterRobotData(CondensedGraphMessage* gmsg){
   if (emsg){
     OptimizableGraph::EdgeSet edges;
     
-    if (DEBUG) cout << "[MR] " << "Adding subgraph edges ";
+    if (DEBUG) cout << "[MR] " << "Added subgraph edges: ";
 
     for (size_t i=0; i<emsg->edgeVector.size(); i++){
       int idFrom = emsg->edgeVector[i].idfrom; 
@@ -375,6 +378,7 @@ void MRGraphSLAM::addInterRobotData(CondensedGraphMessage* gmsg){
 		emsg->edgeVector[i].estimate[2]);
 
     if (DEBUG) cout << idFrom << "->" << idTo << " ";
+    else ROS_INFO_STREAM("Added subgraph edge: " << idFrom << "->" << idTo);
 
 	Eigen::Matrix3d inf;
 	inf(0,0) = emsg->edgeVector[i].information[0];

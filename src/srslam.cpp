@@ -30,6 +30,7 @@
 
 #include <string>
 #include <sstream> 
+#include <definitions.h>
 
 #include "slam/graph_slam.h"
 #include "ros_utils/ros_handler.h"
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
   //Saving g2o file
 
   char buf[100];
-  sprintf(buf, "robot-%i-%s", idRobot, outputFilename.c_str());
+  if (DEBUG) sprintf(buf, "robot-%i-%s", idRobot, outputFilename.c_str());
   ofstream ofmap(buf);
   gslam.graph()->saveVertex(ofmap, gslam.lastVertex());
 
@@ -209,11 +210,11 @@ int main(int argc, char **argv)
       gettimeofday(&t_fin, NULL);
 
       secs = timeval_diff(&t_fin, &t_ini);
-      printf("Optimization took %.16g milliseconds\n", secs * 1000.0);
+      if (DEBUG) printf("Optimization took %.16g milliseconds\n", secs * 1000.0);
 
       currEst = gslam.lastVertex()->estimate();
       char buf[100];
-      sprintf(buf, "robot-%i-%s", idRobot, outputFilename.c_str());
+      if (DEBUG) sprintf(buf, "robot-%i-%s", idRobot, outputFilename.c_str());
       gslam.saveGraph(buf);
 
       if (publishMap || publishGraph){

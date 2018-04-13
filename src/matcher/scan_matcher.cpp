@@ -255,7 +255,7 @@ bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  Op
   _grid.greedySearch(mresvec, reducedScans, regions, thetaRes, maxScore, dx, dy, dth);
   t_fin = clock();
   secs = (double)(t_fin - t_ini) / CLOCKS_PER_SEC;
-  printf("%.16g ms. Matcher results: %i\n", secs * 1000.0, (int) mresvec.size());
+  if (DEBUG) printf("%.16g ms. Matcher results: %i\n", secs * 1000.0, (int) mresvec.size());
   
   if (mresvec.size()){
     mresvec[0].transformation[2] = normalize_theta(mresvec[0].transformation[2]);
@@ -268,7 +268,7 @@ bool ScanMatcher::scanMatchingLC(OptimizableGraph::VertexSet& referenceVset,  Op
   _grid.greedySearch(mresvec, reducedScans, regionspi, thetaRes, maxScore, dx, dy, dth);
   t_fin = clock();
   secs = (double)(t_fin - t_ini) / CLOCKS_PER_SEC;
-  printf("%.16g ms. Matcher results: %i\n", secs * 1000.0, (int) mresvec.size());
+  if (DEBUG) printf("%.16g ms. Matcher results: %i\n", secs * 1000.0, (int) mresvec.size());
 
   if (mresvec.size()){
     mresvec[0].transformation[2] = normalize_theta(mresvec[0].transformation[2]);

@@ -58,7 +58,7 @@ public:
       char buffer[sizebuf];
       
       int nbytes = recvfrom(_iSock, &buffer, sizebuf ,0,(struct sockaddr*)&fromSockAddr, (socklen_t*)&fromSockAddrLen);
-      fprintf(stderr, "Received %i bytes.\n", nbytes);
+      if (DEBUG) fprintf(stderr, "Received %i bytes.\n", nbytes);
       char ipAddress[INET_ADDRSTRLEN];
 
       inet_ntop(AF_INET, &(fromSockAddr.sin_addr.s_addr), ipAddress, INET_ADDRSTRLEN);

@@ -57,8 +57,29 @@ void GraphComm2::init_threads(){
   pthread = boost::thread(&GraphComm2::processQueueThrd, this);
 }
 
+
+
+bool isEqualCondGraphs(CondensedGraphMessage one, CondensedGraphMessage two) {
+    if (one.edgeVector.size() != two.edgeVector.size() || one.closures.size() != two.closures.size())
+        return false;
+
+    for (int i=0; i < one.edgeVector.size(); i++) {
+        if (one.edgeVector[i].idfrom != one.edgeVector[i].idfrom || one.edgeVector[i].idto != one.edgeVector[i].idto)
+            return false;
+    }
+
+    for (int i=0; i < one.edgeVector.size(); i++) {
+        if (one.closures[i] != one.closures[i])
+            return false;
+    }
+
+    return true;
+}
+
+
 void GraphComm2::sendToThrd() {
   int lastSentVertex = -1;
+  CondensedGraphMessage* previous = new CondensedGraphMessage();
   while(1){
 
      //ComboMessage
@@ -78,16 +99,17 @@ void GraphComm2::sendToThrd() {
                 cg_mrslam::SLAM dslamMsg;
                 _rh->createDSlamMsg(cmsg, dslamMsg);
                 _pubsSentReal2.at(i).publish(dslamMsg);
-                ROS_INFO_STREAM("Sent ComboMessage to: " << i);
+                ROS_INFO_STREAM("Sent ComboMessage to robot " << i);
              }
 
              //CondensedGraphMessage
              CondensedGraphMessage* gmsg = _gslam->constructCondensedGraphMessage(i);
-             if (gmsg) {
+             if (gmsg && !isEqualCondGraphs(*gmsg, *previous)) {
+                 previous = gmsg;
                  cg_mrslam::SLAM dslamMsg;
                  _rh->createDSlamMsg(gmsg, dslamMsg);
                  _pubsSentReal2.at(i).publish(dslamMsg);
-                 ROS_INFO_STREAM("Sent CondensedGraph message to: " << i);
+                 ROS_INFO_STREAM("Sent CondensedGraphMessage to robot " << i);
              }
          }
      }
@@ -97,7 +119,10 @@ void GraphComm2::sendToThrd() {
 
 void GraphComm2::receiveFromThrd(cg_mrslam::SLAM dslamMsg){
 
-    ROS_INFO_STREAM("Received message from: " << dslamMsg.robotId);
+    if (dslamMsg.type == 4)
+        ROS_INFO_STREAM("Received ComboMessage from robot " << dslamMsg.robotId);
+    else if (dslamMsg.type == 7)
+        ROS_INFO_STREAM("Received CondensedGraphMessage from robot " << dslamMsg.robotId);
 
     StampedRobotMessage vmsg;
     RobotMessage* rmsg;

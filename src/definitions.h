@@ -1,6 +1,6 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
-#define DEBUG true
+#define DEBUG false
 
 #endif // DEFINITIONS_H

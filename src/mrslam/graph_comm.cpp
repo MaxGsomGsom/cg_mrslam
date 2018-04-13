@@ -162,7 +162,7 @@ RobotMessage* GraphComm::receive(){
   char buffer[sizebuf];
 
   int nbytes = recvfrom(_iSock, &buffer, sizebuf ,0,(struct sockaddr*)&toSockAddr, (socklen_t*)&toSockAddrLen);
-  fprintf(stderr, "Received %i bytes.\n", nbytes);
+  if (DEBUG) fprintf(stderr, "Received %i bytes.\n", nbytes);
 
   //////////////////
   //Deserialize data
@@ -178,7 +178,7 @@ void GraphComm::receiveFromThrd(){
     //Receive data
     RobotMessage* msg = receive();
 
-    fprintf(stderr, "Received info from: %i\n", msg->robotId());
+    if (DEBUG) fprintf(stderr, "Received info from: %i\n", msg->robotId());
     if (_typeExperiment == REAL){
       _rh->publishReceivedMsg(msg);
       _rh->publishPing(msg->robotId());
