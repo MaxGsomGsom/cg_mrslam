@@ -206,6 +206,19 @@ target_link_libraries(comm_publisher
 )
 add_dependencies(comm_publisher cg_mrslam_generate_messages_cpp)
 
+add_executable(g2o_merger src/g2o_merger.cpp)
+target_link_libraries(g2o_merger
+  ${catkin_LIBRARIES}
+  ${CSPARSE_LIBRARY}
+  ${OpenCV_LIBS}
+  ${G2O_TYPES_DATA}
+  ${G2O_SOLVER_CSPARSE_EXTENSION}
+  ${G2O_SOLVER_CSPARSE}
+  ${G2O_CORE_LIBRARY}
+  ${G2O_STUFF_LIBRARY}
+  ${G2O_TYPES_SLAM2D}
+)
+
 #############
 ## Install ##
 #############

@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 
   //Saving g2o file
   char buf[100];
-  if (DEBUG) sprintf(buf, "robot-%i-%s", idRobot, outputFilename.c_str());
+  sprintf(buf, "robot-%i-%s", idRobot, outputFilename.c_str());
   ofstream ofmap(buf);
   gslam.graph()->saveVertex(ofmap, gslam.lastVertex());
 
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 
       currEst = gslam.lastVertex()->estimate();
       char buf[100];
-      if (DEBUG) sprintf(buf, "robot-%i-%s", idRobot, outputFilename.c_str());
+      sprintf(buf, "robot-%i-%s", idRobot, outputFilename.c_str());
       gslam.saveGraph(buf);
 
       if (publishMap || publishGraph){
