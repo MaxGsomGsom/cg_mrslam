@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     cout << "Processing..." << endl;
 
     ifstream stream1, stream2;
-    vector<string> vert1, vert2, edg1, edg2, fix1, fix2;
+    vector<string> vert1, vert2, edg1, edg2, fix1;
     string str;
 
     stream1.open(file1);
@@ -56,8 +56,6 @@ int main(int argc, char** argv)
             vert2.push_back(str);
         else if (str.find("EDGE_SE2") != string::npos)
             edg2.push_back(str);
-        else if (str.find("FIX") != string::npos)
-            fix2.push_back(str);
     }
     stream2.close();
 
@@ -82,19 +80,13 @@ int main(int argc, char** argv)
         }
     }
 
-    for (auto it1 = fix1.begin(); it1 != fix1.end(); it1++) {
-        for (auto it2 = fix2.begin(); it2 != fix2.end(); it2++) {
-            if (get_int(*it1, 4) == get_int(*it2, 4))
-                fix2.erase(it2);
-        }
-    }
-
 
     ofstream out_stream;
     out_stream.open(outp);
 
     for (auto str3: vert1) out_stream << str3 << endl;
     for (auto str3: vert2) out_stream << str3 << endl;
+    for (auto str3: fix1) out_stream << str3 << endl;
     for (auto str3: edg1) out_stream << str3 << endl;
     for (auto str3: edg2) out_stream << str3 << endl;
 
